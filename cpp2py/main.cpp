@@ -44,6 +44,7 @@ int main()
   sem_t * sem = sem_open("/capstone", O_CREAT|O_EXCL, 0666, 1);
   if (sem == SEM_FAILED) {
     std::cout<<"*** *** sem_open failed!!!"<<std::endl;
+		sem_unlink("/capstone");
     sem_close(sem);
     exit(1);
   }
@@ -58,17 +59,18 @@ int main()
 	//char str[] = "one";
 	//memcpy(shared_memory, str, strlen(str));
 	long num = 1;
-	for (int i = 0; i < 5; ++i) {
+	for (int i = 0; i < 1000000; ++i) {
 		sem_wait(sem);
 		//memcpy(shared_memory+sizeof(long)*i, &num, sizeof(long));
 		memcpy(shared_memory, &num, sizeof(long));
 		num++;
-		sleep(1);
+		// sleep(1);
 		sem_post(sem);
-		sleep(1);
+		// sleep(1);
 	}
 
 
+	sleep(2);
 
 
 	// Clean up Semaphore
