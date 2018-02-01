@@ -165,9 +165,8 @@ int _EF_::EyeFinder::start(void) {
         std::tuple<long, long, long, long> r_tp =
             EyeFinder::setMinAndMax(42, 47, shapes);
 
-        // ROI for left eye
+        // ROI for left eye + right eye
         cv::Rect roi_l = EyeFinder::getROI(l_tp, temp);
-        // ROI for right eye
         cv::Rect roi_r = EyeFinder::getROI(r_tp, temp);
 
         // Display eye tracking on the screen
@@ -180,16 +179,8 @@ int _EF_::EyeFinder::start(void) {
           win[1].set_image(l_eye_cimg);
           win[2].set_image(r_eye_cimg);
         }
-      }
 
-      if (showmain) {
-        if (clear)
-          win[0].clear_overlay();
-        win[0].set_image(cimg);
-        win[0].add_overlay(rfd_res);
-      }
-
-      if (shapes.size()) {
+        // CALCULATIONS NOW!!!
         std::vector<std::pair<long, long>> facial_features_vec;
 
         // Left eye + Right eye points
@@ -198,16 +189,28 @@ int _EF_::EyeFinder::start(void) {
         debug_preCalculationPoints(facial_features_vec);
 #endif
 
-        // Find the face angle
+        // Find the face angle + pupils
+        MACRO_START;
         calculateFaceAngles();
+        MACRO_END;
+        MACRO_P_DIFF("calculateFaceAngles(...) = ");
 
-        // Find the pupil
+        MACRO_START;
         calculatePupils();
+        MACRO_END;
+        MACRO_P_DIFF("calculatePupils(...) = ");
 
         // Write out the Facial Features
         writeFacialFeaturesToShm(facial_features_vec);
       } else {
-        writeBadFacialFeaturesToShm();
+        writeBadFacialFeaturesToShm(); // or skip it
+      }
+
+      if (showmain) {
+        if (clear)
+          win[0].clear_overlay();
+        win[0].set_image(cimg);
+        win[0].add_overlay(rfd_res);
       }
       std::cout << std::endl;
     }
@@ -342,7 +345,8 @@ void _EF_::EyeFinder::preCalculationPoints(
 }
 void _EF_::EyeFinder::debug_preCalculationPoints(
     std::vector<std::pair<long, long>> &facial_features_vec) {
-  std::cout << "_EF_::EyeFinder::debug_preCalculationPoints"<<" ";
+  std::cout << "_EF_::EyeFinder::debug_preCalculationPoints"
+            << " ";
   for (const auto &pr : facial_features_vec) {
     std::cout << "(" << pr.first << "," << pr.second << ")"
               << " ";
@@ -352,11 +356,11 @@ void _EF_::EyeFinder::debug_preCalculationPoints(
 
 // *****
 // calculateFaceAngles()
-void _EF_::EyeFinder::calculateFaceAngles(void) {}
+void _EF_::EyeFinder::calculateFaceAngles(void) {usleep(10000);}
 
 // *****
 // calculatePupils() a.k.a. Timm Barthe Algorithm
-void _EF_::EyeFinder::calculatePupils(void) {}
+void _EF_::EyeFinder::calculatePupils(void) {usleep(10000);}
 
 // *****
 // writeFacialFeaturesToShm()
