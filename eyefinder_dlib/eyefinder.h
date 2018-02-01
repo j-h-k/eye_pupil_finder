@@ -72,13 +72,18 @@ private:
   // std::vector<std::pair<long, long>> facial_features_vec;
   // change to python list later with boost, look below in start()
 
-  void
-  preCalculationPoints(std::vector<std::pair<long, long>> &facial_features_vec);
   std::tuple<long, long, long, long>
   setMinAndMax(int start, int end,
                std::vector<dlib::full_object_detection> &shapes);
   cv::Rect getROI(std::tuple<long, long, long, long> &tp, cv::Mat frame);
+
   bool anyWindowsClosed(void);
+
+  void
+  preCalculationPoints(std::vector<std::pair<long, long>> &facial_features_vec,
+                       const std::vector<dlib::full_object_detection> &shapes);
+  void debug_preCalculationPoints(
+      std::vector<std::pair<long, long>> &facial_features_vec);
   void calculateFaceAngles(void);
   void calculatePupils(void);
   void writeFacialFeaturesToShm(

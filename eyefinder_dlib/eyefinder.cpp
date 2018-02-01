@@ -192,17 +192,18 @@ int _EF_::EyeFinder::start(void) {
       if (shapes.size()) {
         std::vector<std::pair<long, long>> facial_features_vec;
 
+        // Left eye + Right eye points
+        preCalculationPoints(facial_features_vec, shapes);
+#if DEBUG
+        debug_preCalculationPoints(facial_features_vec);
+#endif
+
         // Find the face angle
         calculateFaceAngles();
 
         // Find the pupil
         calculatePupils();
 
-        // Remove this *** *** *** *** ***
-        // Need to create the facial_features_vec...
-        for (long i = 0; i < 60; ++i)
-          facial_features_vec.push_back(
-              std::make_pair<long, long>(i * 100, i * 100 + 1));
         // Write out the Facial Features
         writeFacialFeaturesToShm(facial_features_vec);
       } else {
@@ -296,8 +297,9 @@ std::tuple<long, long, long, long> _EF_::EyeFinder::setMinAndMax(
 cv::Rect _EF_::EyeFinder::getROI(std::tuple<long, long, long, long> &tp,
                                  cv::Mat frame) {
 #if DEBUG
-  std::cout << std::get<0>(tp) << " " << std::get<1>(tp) << " "
-            << std::get<2>(tp) << " " << std::get<3>(tp) << std::endl;
+  std::cout << "_EF_::EyeFinder::getROI" << std::get<0>(tp) << " "
+            << std::get<1>(tp) << " " << std::get<2>(tp) << " "
+            << std::get<3>(tp) << std::endl;
 #endif
   auto start_x = std::max(std::get<0>(tp) - 10, long(0));
   auto start_y = std::max(std::get<1>(tp) - 10, long(0));
@@ -331,7 +333,22 @@ bool _EF_::EyeFinder::anyWindowsClosed(void) {
 //  0-11 = x, y coordinates of left eye points
 //  12-23 = x, y coordinates of right eye points
 void _EF_::EyeFinder::preCalculationPoints(
-    std::vector<std::pair<long, long>> &facial_features_vec) {}
+    std::vector<std::pair<long, long>> &facial_features_vec,
+    const std::vector<dlib::full_object_detection> &shapes) {
+  for (int i = 36; i <= 47; ++i) {
+    auto shp = shapes[0].part(i);
+    facial_features_vec.push_back(std::make_pair(shp.x(), shp.y()));
+  }
+}
+void _EF_::EyeFinder::debug_preCalculationPoints(
+    std::vector<std::pair<long, long>> &facial_features_vec) {
+  std::cout << "_EF_::EyeFinder::debug_preCalculationPoints"<<" ";
+  for (const auto &pr : facial_features_vec) {
+    std::cout << "(" << pr.first << "," << pr.second << ")"
+              << " ";
+  }
+  std::cout << std::endl;
+}
 
 // *****
 // calculateFaceAngles()
