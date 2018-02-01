@@ -55,39 +55,6 @@ add_subdirectory(../dlib dlib_build)
 #target_link_libraries(assignment_learning_ex dlib::dlib)
 
 
-
-# To compile this program all you need to do is ask cmake.  You would type
-# these commands from within the directory containing this CMakeLists.txt
-# file:
-#   mkdir build
-#   cd build
-#   cmake ..
-#   cmake --build . --config Release
-#
-# The cmake .. command looks in the parent folder for a file named
-# CMakeLists.txt, reads it, and sets up everything needed to build program.
-# Also, note that CMake can generate Visual Studio or XCode project files.  So
-# if instead you had written:
-#   cd build
-#   cmake .. -G Xcode
-#
-# You would be able to open the resulting Xcode project and compile and edit
-# the example programs within the Xcode IDE.  CMake can generate a lot of
-# different types of IDE projects.  Run the cmake -h command to see a list of
-# arguments to -G to see what kinds of projects cmake can generate for you.  It
-# probably includes your favorite IDE in the list.
-
-
-
-
-#################################################################################
-#################################################################################
-#  A CMakeLists.txt file can compile more than just one program.  So below we
-#  tell it to compile the other dlib example programs using pretty much the
-#  same CMake commands we used above.
-#################################################################################
-#################################################################################
-
 if (DLIB_NO_GUI_SUPPORT)
    message("No GUI support, so we won't build the eyefinder example.")
 else()
@@ -95,7 +62,7 @@ else()
    if (OpenCV_FOUND)
       include_directories(${OpenCV_INCLUDE_DIRS})
 
-      add_executable(eyefinder eyefinder.cpp)
+      add_executable(eyefinder main.cpp eyefinder.cpp)
       target_link_libraries(eyefinder dlib::dlib ${OpenCV_LIBS} )
    else()
       message("OpenCV not found, so we won't build the eyefinder example.")
