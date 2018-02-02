@@ -372,9 +372,14 @@ void _EF_::EyeFinder::calculatePupils(void) {usleep(10000);}
 //  28-29 = face angles (another code)
 void _EF_::EyeFinder::writeFacialFeaturesToShm(
     const std::vector<std::pair<long, long>> &facial_features_vec) {
+  int i = 0;
+  sem_wait(sem);
   for (const auto pr : facial_features_vec) {
-    // std::cout<<pr.first<<","<<pr.second<<" ";
+    long x = pr.first, y = pr.second;
+    memcpy(shared_memory+sizeof(long)*i, &x, sizeof(long));
+    memcpy(shared_memory+sizeof(long)*(i+1), &y, sizeof(long));
+    i+=2;
   }
-  // std::cout<<std::endl;
+  sem_post(sem);
 }
 void _EF_::EyeFinder::writeBadFacialFeaturesToShm(void) {}

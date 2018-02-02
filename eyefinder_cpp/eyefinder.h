@@ -65,7 +65,7 @@ private:
   const char *sem_name = "/capstone";
 
   int shmid;
-  void *shared_memory;
+  char *shared_memory;
   const key_t key = 123456;
   const unsigned int shared_size =  2 * 30 * sizeof(long);
 

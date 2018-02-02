@@ -34,7 +34,7 @@ class EyeFinderReader:
         self.sem.close()
         # Clean up shared memory
         try:
-            self.memory.remove()
+            self.memory.detach()
         except:
             pass
 
