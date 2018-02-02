@@ -2,8 +2,13 @@ import sysv_ipc
 import posix_ipc
 import time
 import os
+import ctypes
+
 
 class EyeFinderReader:
+    num_longs = 2 * 30 * ctypes.sizeof(ctypes.c_long)
+    sizeoflong = ctypes.sizeof(ctypes.c_long)
+
     def __enter__(self):
         # Connect to existing shared memory
         self.memory = sysv_ipc.SharedMemory(123456)
@@ -11,14 +16,18 @@ class EyeFinderReader:
         self.sem = posix_ipc.Semaphore("/capstone")
         return self
 
+    def bytesToLongs(self, bstr):
+        tmp = [int.from_bytes(bstr[i * EyeFinderReader.sizeoflong:(i + 1) * EyeFinderReader.sizeoflong], byteorder='little')
+               for i in range(int(len(bstr) / EyeFinderReader.sizeoflong))]
+        return [[tmp[i],tmp[i+1]] for i in range(0, len(tmp), 2)]
+
     def read(self):
-        for x in range(5):
-            self.sem.acquire()
-            memory_value = self.memory.read()
-            print (int.from_bytes(memory_value, byteorder='little'))
-            self.sem.release()
-            time.sleep(0.05)
-            #time.sleep(1)
+        self.sem.acquire()
+        memory_value = self.memory.read()
+        #print (int.from_bytes(memory_value, byteorder='little'))
+        self.sem.release()
+        facial_features_list = self.bytesToLongs(memory_value)
+        return facial_features_list
 
     def __exit__(self, exc_type, exc_value, traceback):
         # Clean up Semaphore
@@ -29,5 +38,6 @@ class EyeFinderReader:
         except:
             pass
 
+
 with EyeFinderReader() as efr:
-    efr.read()
+    print(efr.read())
