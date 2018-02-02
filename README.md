@@ -1,3 +1,3 @@
 # Usage:
 
-cd eyefinder_dlib && ./run_script.sh
+cd eyefinder_cpp && ./run_script.sh
