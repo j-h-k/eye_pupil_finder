@@ -158,10 +158,9 @@ int _EF_::EyeFinder::start(void) {
           render_face_detections(shapes);
 
       if (shapes.size()) { // need to check
-        // left eye
+        // left eye + right eye
         std::tuple<long, long, long, long> l_tp =
             EyeFinder::setMinAndMax(36, 41, shapes);
-        // right eye
         std::tuple<long, long, long, long> r_tp =
             EyeFinder::setMinAndMax(42, 47, shapes);
 
@@ -179,6 +178,114 @@ int _EF_::EyeFinder::start(void) {
           win[1].set_image(l_eye_cimg);
           win[2].set_image(r_eye_cimg);
         }
+
+        // +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++
+        cv::Mat src(roi_l_mat), src_gray, src_gray_blur, src_gray_blur_inv;
+        cv::Mat grad;
+        int scale = 1;
+        int delta = 0;
+        int ddepth = CV_64F;
+
+        cv::cvtColor( src, src_gray, CV_BGR2GRAY );
+        cv::GaussianBlur( src_gray, src_gray_blur, cv::Size(5,5), 0, 0, cv::BORDER_DEFAULT );
+        src_gray_blur_inv = cv::Mat::ones(src_gray_blur.size(), src_gray_blur.type()) * 255 - src_gray_blur;
+
+        // double max_objective = 0.0;
+        // unsigned int max_row, max_col;
+        // for (int i = 0; i < src_gray_blur.rows; ++i)
+        // {
+        //     cv::Vec3b* pixel = src_gray_blur.ptr<cv::Vec3b>(i); // point to first pixel in row
+        //     cv::Vec3b* pixel2 = src_gray_blur_inv.ptr<cv::Vec3b>(i); // point to first pixel in row
+        //     for (int j = 0; j < src_gray_blur.cols; ++j)
+        //     {
+        //         std::cout<< (int)pixel[j][0] <<" ";
+        //         std::cout<< (int)pixel2[j][0] <<std::endl;
+        //     }
+        // }
+        // std::cout <<"Size blur: " << src_gray_blur.rows * src_gray_blur.cols << std::endl;
+        // std::cout <<"Size blur->inv: " << src_gray_blur_inv.rows * src_gray_blur_inv.cols << std::endl;
+        // return 0;
+        // std::cout << src_gray_blur.type() << std::endl;
+        // std::string r;
+        // switch ( src_gray_blur.type() ) {
+        //   case CV_8U:  r = "8U"; break;
+        //   case CV_8S:  r = "8S"; break;
+        //   case CV_16U: r = "16U"; break;
+        //   case CV_16S: r = "16S"; break;
+        //   case CV_32S: r = "32S"; break;
+        //   case CV_32F: r = "32F"; break;
+        //   case CV_64F: r = "64F"; break;
+        //   default:     r = "User"; break;
+        // }
+        // std::cout << r << std::endl;
+        // return 0;
+
+        cv::Mat grad_x, grad_y;
+        //cv::Mat abs_grad_x, abs_grad_y;
+        cv::Sobel( src_gray, grad_x, ddepth, 1, 0, 3, scale, delta, cv::BORDER_DEFAULT );
+        //cv::convertScaleAbs( grad_x, abs_grad_x );
+        cv::Sobel( src_gray, grad_y, ddepth, 0, 1, 3, scale, delta, cv::BORDER_DEFAULT );
+        //cv::convertScaleAbs( grad_y, abs_grad_y );
+
+        cv::Mat mag(grad_x.size(), grad_x.type());
+        cv::magnitude(grad_x, grad_y, mag);
+        cv::divide(grad_x, mag, grad_x);
+        cv::divide(grad_y, mag, grad_y);
+
+        cv::Mat pixel_combination_x(src_gray_blur_inv.size(), CV_16S);
+        cv::Mat pixel_combination_y(src_gray_blur_inv.size(), CV_16S);
+
+        int row_LIMIT = src_gray_blur_inv.rows;
+        int col_LIMIT = src_gray_blur_inv.cols;
+        double max_objective = -777777.777;
+        int max_r=0, max_c=0;
+        MACRO_START;
+        for (int pixel_r = 10; pixel_r < row_LIMIT-10; ++pixel_r)
+        {
+            for (int pixel_c = 10; pixel_c < col_LIMIT-10; ++pixel_c)
+            {
+                double obj_val = 0.0;
+                for (int i = 0; i < row_LIMIT; ++i)
+                {
+                    cv::Vec3b* r_grad_x = grad_x.ptr<cv::Vec3b>(i);
+                    cv::Vec3b* r_grad_y = grad_y.ptr<cv::Vec3b>(i);
+                    cv::Vec3b* r_src_gray_blur_inv = src_gray_blur_inv.ptr<cv::Vec3b>(i);
+                    for (int j = 0; j < col_LIMIT; ++j)
+                    {
+                        int x_val = i - pixel_r;
+                        int y_val = j - pixel_c;
+                        if ((x_val | y_val) == 0) break;
+                        double magnitude = sqrt(x_val*x_val + y_val*y_val);
+                        double unit_x = x_val/magnitude;
+                        double unit_y = y_val/magnitude;
+
+                        double dot = (unit_x*r_grad_x[j][0] + unit_y*r_grad_y[j][0]);
+                        double dot2 = dot * dot;
+
+                        double pixel_val = r_src_gray_blur_inv[j][0] * dot2;
+                        obj_val += pixel_val;
+                    }
+                }
+                if (obj_val > max_objective) {
+                  max_r = pixel_r;
+                  max_c = pixel_c;
+                  max_objective = obj_val;
+                }
+            }
+        }
+        MACRO_END;
+        MACRO_P_DIFF("for * four = ");
+        std::cout<< "MAX X && MAX Y: " << max_r << " " << max_c << std::endl;
+
+        std::vector<dlib::full_object_detection> shapes_pupil;
+        shapes_pupil.push_back(pose_model(cimg, dlib::rectangle(max_r, max_c, max_r-1, max_c-1)));
+        std::vector<dlib::image_window::overlay_line> rfd_res_pupil =
+            render_face_detections(shapes_pupil);
+
+        win[1].clear_overlay();
+        win[1].set_image(l_eye_cimg);
+        win[1].add_overlay(rfd_res_pupil);
+        // +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++ +++
 
         // CALCULATIONS NOW!!!
         std::vector<std::pair<long, long>> facial_features_vec;
