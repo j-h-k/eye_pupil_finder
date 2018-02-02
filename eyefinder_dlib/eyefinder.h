@@ -67,7 +67,7 @@ private:
   int shmid;
   void *shared_memory;
   const key_t key = 123456;
-  const unsigned int shared_size = 100;
+  const unsigned int shared_size =  2 * 30 * sizeof(long);
 
   // std::vector<std::pair<long, long>> facial_features_vec;
   // change to python list later with boost, look below in start()
