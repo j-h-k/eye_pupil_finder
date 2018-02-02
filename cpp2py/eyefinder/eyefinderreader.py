@@ -39,5 +39,6 @@ class EyeFinderReader:
             pass
 
 
-with EyeFinderReader() as efr:
-    print(efr.read())
+# if __name__ == "__main__":
+#     with EyeFinderReader() as efr:
+#         print(efr.read())

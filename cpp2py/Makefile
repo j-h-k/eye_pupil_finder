@@ -7,7 +7,7 @@ run_cpp: cpp
 	./a.out &
 
 py:
-	sleep 1 && python3 main.py
+	sleep 1 && python3 user.py
 
 
 clean:
