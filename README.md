@@ -1,3 +1,10 @@
+# DISTONINUED HERE, CONTINUING AT:
+### https://github.com/EyeTalk
+
+---
+---
+---
+
 # What this is...
 This is a cpp application that locates the pupils using dlib and opencv.  
 Also provided is a python package to read the facial features points (when cpp application is running alongside it).
